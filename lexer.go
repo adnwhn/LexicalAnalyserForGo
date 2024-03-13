@@ -66,7 +66,7 @@ var keywords = map[string]TokenType{
 var operators = []string{
 	":", "+", "-", "=", "*", "/", "%", "<", ">", "!", "&", "|", "^",
 	"++", "--", "==", "<<", ">>", "&&", "||",
-	":=", "+=", "-=", "*=", "/=", "%=", "<=", ">=", "!=", "&=", "|=", "^=",
+	":=", "+=", "-=", "*=", "/=", "%=", "<=", ">=", "!=", "&=", "|=", "^=", "<-", "->",
 }
 
 // Functia care verifica daca elementul curent apartine unui slice
@@ -108,6 +108,12 @@ func scanToken(input string, pos int, line int) (token Token, newPos int, newLin
 			return Token{Type: keywordType, Length: pos - start, Line: line, Pos: start, Value: identifier}, pos, line, nil
 		}
 		return Token{Type: TokenIdent, Length: pos - start, Line: line, Pos: start, Value: identifier}, pos, line, nil
+	case input[pos] == '_' && unicode.IsLetter(rune(input[pos + 1])):
+		start := pos
+		for pos < len(input) && (unicode.IsLetter(rune(input[pos])) || unicode.IsDigit(rune(input[pos]))) || (input[pos] == '_') {
+			pos++
+		}
+		return Token{Type: TokenIdent, Length: pos - start, Line: line, Pos: start, Value: input[start:pos]}, pos, line, nil
 	// Int
 	case unicode.IsDigit(rune(input[pos])):
 		start := pos
@@ -129,7 +135,8 @@ func scanToken(input string, pos int, line int) (token Token, newPos int, newLin
 		subunit := input[start : pos+1]
 		return Token{Type: TokenFloat, Length: pos - start + 1, Line: line, Pos: start, Value: subunit}, pos + 1, line, nil
 	// Delimitator
-	case input[pos] == '(' || input[pos] == ')' || input[pos] == '[' || input[pos] == ']' || input[pos] == '{' || input[pos] == '}' || input[pos] == ',' || input[pos] == ';' || (input[pos] == '.' && unicode.IsLetter(rune(input[pos-1])) && unicode.IsLetter(rune(input[pos+1]))):
+	case input[pos] == '(' || input[pos] == ')' || input[pos] == '[' || input[pos] == ']' || input[pos] == '{' || input[pos] == '}' || 
+		input[pos] == ',' || input[pos] == ';' || (input[pos] == '.' && unicode.IsLetter(rune(input[pos-1])) && unicode.IsLetter(rune(input[pos+1]))):
 		// Verificare inchidere delimitator (), [], {}
 		if input[pos] == '(' {
 			start := pos
@@ -141,7 +148,7 @@ func scanToken(input string, pos int, line int) (token Token, newPos int, newLin
 				pos++
 			}
 			if pos >= len(input) {
-				return Token{Type: TokenError, Length: pos - start, Line: line, Pos: start, Value: input[start:pos]}, start + 1, line, fmt.Errorf("! Eroare lexicala la linia %d, pozitia %d: delimitatorul %s nu este inchis", line, start, string(input[start]))
+				return Token{Type: TokenError, Length: pos - start, Line: line, Pos: start, Value: input[start:pos]}, pos + 1, line, fmt.Errorf("! Eroare lexicala la linia %d, pozitia %d: delimitatorul %s nu este inchis", line, start, string(input[start]))
 			}
 			return Token{Type: TokenDelimiter, Length: 1, Line: line, Pos: start, Value: string(input[start])}, start + 1, line, nil
 		} else if input[pos] == '[' {
@@ -154,7 +161,7 @@ func scanToken(input string, pos int, line int) (token Token, newPos int, newLin
 				pos++
 			}
 			if pos >= len(input) {
-				return Token{Type: TokenError, Length: pos - start, Line: line, Pos: start, Value: input[start:pos]}, start + 1, line, fmt.Errorf("! Eroare lexicala la linia %d, pozitia %d: delimitatorul %s nu este inchis", line, start, string(input[start]))
+				return Token{Type: TokenError, Length: pos - start, Line: line, Pos: start, Value: input[start:pos]}, pos + 1, line, fmt.Errorf("! Eroare lexicala la linia %d, pozitia %d: delimitatorul %s nu este inchis", line, start, string(input[start]))
 			}
 			return Token{Type: TokenDelimiter, Length: 1, Line: line, Pos: start, Value: string(input[start])}, start + 1, line, nil
 		} else if input[pos] == '{' {
@@ -167,7 +174,7 @@ func scanToken(input string, pos int, line int) (token Token, newPos int, newLin
 				pos++
 			}
 			if pos >= len(input) {
-				return Token{Type: TokenError, Length: pos - start, Line: line, Pos: start, Value: input[start:pos]}, start + 1, line, fmt.Errorf("! Eroare lexicala la linia %d, pozitia %d: delimitatorul %s nu este inchis", line, start, string(input[start]))
+				return Token{Type: TokenError, Length: pos - start, Line: line, Pos: start, Value: input[start:pos]}, pos + 1, line, fmt.Errorf("! Eroare lexicala la linia %d, pozitia %d: delimitatorul %s nu este inchis", line, start, string(input[start]))
 			}
 			return Token{Type: TokenDelimiter, Length: 1, Line: line, Pos: start, Value: string(input[start])}, start + 1, line, nil
 		}
@@ -183,7 +190,7 @@ func scanToken(input string, pos int, line int) (token Token, newPos int, newLin
 			pos++
 		}
 		if pos >= len(input) {
-			return Token{Type: TokenError, Length: pos - start, Line: line, Pos: start, Value: input[start:pos]}, start + 1, line, fmt.Errorf("! Eroare lexicala la linia %d, pozitia %d: string neterminat", line, start)
+			return Token{Type: TokenError, Length: pos - start, Line: line, Pos: start, Value: input[start:pos]}, pos + 1, line, fmt.Errorf("! Eroare lexicala la linia %d, pozitia %d: string neterminat", line, start)
 		}
 		stringFound := input[start+1 : pos]
 		return Token{Type: TokenString, Length: pos - start + 1 - 2, Line: line, Pos: start, Value: stringFound}, pos + 1, line, nil
@@ -212,7 +219,7 @@ func scanToken(input string, pos int, line int) (token Token, newPos int, newLin
 					pos++
 				}
 				if pos >= len(input) {
-					return Token{Type: TokenError, Length: pos - start, Line: line, Pos: start, Value: input[start-2 : pos]}, start + 1, line, fmt.Errorf("! Eroare lexicala la linia %d, pozitia %d: comentariul nu este inchis", line, start)
+					return Token{Type: TokenError, Length: pos - start, Line: line, Pos: start, Value: input[start-2 : pos]}, pos + 1, line, fmt.Errorf("! Eroare lexicala la linia %d, pozitia %d: comentariul nu este inchis", line, start)
 				}
 				comment := input[start:pos]
 				return Token{Type: TokenComment, Length: pos - start + 1 - 2, Line: line, Pos: start, Value: comment}, pos + 2, line, nil
@@ -253,10 +260,6 @@ func main() {
 			// Actualizare pozitie
 			pos = newPos
 			line = newLine
-
-			// if pos >= 55 {
-			// 	fmt.Println("debug", pos)
-			// }
 
 			// Terminare dupa ce se ajunge la sfarsitul fisierului
 			if token.Type == TokenEOF {
