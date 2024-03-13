@@ -1,0 +1,10 @@
+package main
+
+import "fmt"
+
+func main() {
+	/* bbb*b
+	bb */
+	fmt.Println("Hello, world!")
+	x = .34456
+}

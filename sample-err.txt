@@ -1,0 +1,20 @@
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello, 
+    world!") // Acesta este un comentariu
+    var x float64 := 3.14
+    var y := 10 + 5
+    y++
+    var a bool
+    var b bool
+    var c bool := a && b 
+    @
+    /*
+    comentariu 
+    * multi
+    linie
+    */
+}
